@@ -50,21 +50,18 @@ public class AsynchronousClient
                 new AsyncCallback(ConnectCallback), client);
             connectDone.WaitOne();
 
-            while (true)
-            {
-                string input = Console.ReadLine();
-                // Send test data to the remote device.  
-                Send(client, $"{input}<EOF>");
-                sendDone.WaitOne();
+            string input = Console.ReadLine();
+            // Send test data to the remote device.  
+            Send(client, $"{input}<EOF>");
+            sendDone.WaitOne();
 
-                // Receive the response from the remote device.  
-                Receive(client);
-                receiveDone.WaitOne();
+            // Receive the response from the remote device.  
+            Receive(client);
+            receiveDone.WaitOne();
 
-                // Write the response to the console.  
-                Console.WriteLine("Response received : {0}", response);
-                client.Shutdown(SocketShutdown.Both);
-            }
+            // Write the response to the console.  
+            Console.WriteLine("Response received : {0}", response);
+            client.Shutdown(SocketShutdown.Both);
             client.Close();
 
         }

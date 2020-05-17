@@ -30,7 +30,7 @@ namespace SocketLibTester.SocketHelpers
             Buffer = new byte[BufferMaxSize];
         }
 
-        public State(int buffMaxSize, ref Client client)
+        public State(int buffMaxSize, Client client)
         {
             BufferMaxSize = buffMaxSize;
             Buffer = new byte[BufferMaxSize];

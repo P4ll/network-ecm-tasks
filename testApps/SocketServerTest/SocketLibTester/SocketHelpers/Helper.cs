@@ -64,7 +64,7 @@ namespace SocketLibTester.SocketHelpers
             }
         }
 
-        private static void Send(Socket handler, String data)
+        public static void Send(Socket handler, String data)
         {
             byte[] byteData = Encoding.ASCII.GetBytes(data);
 
@@ -72,7 +72,7 @@ namespace SocketLibTester.SocketHelpers
                 new AsyncCallback(SendCallback), handler);
         }
 
-        private static void SendCallback(IAsyncResult ar)
+        public static void SendCallback(IAsyncResult ar)
         {
             try
             {
@@ -91,7 +91,32 @@ namespace SocketLibTester.SocketHelpers
             }
         }
 
-        private static void ConnectCallback(IAsyncResult ar)
+        public static void SendClient(Socket handler, String data)
+        {
+            byte[] byteData = Encoding.ASCII.GetBytes(data);
+
+            handler.BeginSend(byteData, 0, byteData.Length, 0,
+                new AsyncCallback(SendCallbackClient), handler);
+        }
+
+        public static void SendCallbackClient(IAsyncResult ar)
+        {
+            try
+            {
+                Socket client = (Socket)ar.AsyncState;
+
+                int bytesSent = client.EndSend(ar);
+                Console.WriteLine("Sent {0} bytes to server.", bytesSent);
+
+                Client.SendDone.Set();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.ToString());
+            }
+        }
+
+        public static void ConnectCallback(IAsyncResult ar)
         {
             try
             {
@@ -110,14 +135,11 @@ namespace SocketLibTester.SocketHelpers
             }
         }
 
-        private static void Receive(Socket client)
+        public static void Receive(ref State state)
         {
             try
             {
-                State state = new State();
-                state.StateSocket = client;
-
-                client.BeginReceive(state.Buffer, 0, state.BufferMaxSize, 0,
+                state.StateSocket.BeginReceive(state.Buffer, 0, state.BufferMaxSize, 0,
                     new AsyncCallback(ReceiveCallback), state);
             }
             catch (Exception e)
@@ -126,7 +148,7 @@ namespace SocketLibTester.SocketHelpers
             }
         }
 
-        private static void ReceiveCallback(IAsyncResult ar)
+        public static void ReceiveCallback(IAsyncResult ar)
         {
             try
             {
