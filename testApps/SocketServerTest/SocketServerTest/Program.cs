@@ -26,18 +26,10 @@ namespace SocketServerTest
 
         public static void StartListening()
         {
-            // Establish the local endpoint for the socket.  
-            // The DNS name of the computer  
-            // running the listener is "host.contoso.com".  
-            IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
-            IPAddress ipAddress = ipHostInfo.AddressList[0];
-            IPEndPoint localEndPoint = new IPEndPoint(ipAddress, 11000);
+            IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
 
-            // Create a TCP/IP socket.  
-            Socket listener = new Socket(ipAddress.AddressFamily,
-                SocketType.Stream, ProtocolType.Tcp);
+            Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-            // Bind the socket to the local endpoint and listen for incoming connections.  
             try
             {
                 listener.Bind(localEndPoint);
@@ -63,10 +55,6 @@ namespace SocketServerTest
             {
                 Console.WriteLine(e.ToString());
             }
-
-            Console.WriteLine("\nPress ENTER to continue...");
-            Console.Read();
-
         }
 
         public static void AcceptCallback(IAsyncResult ar)

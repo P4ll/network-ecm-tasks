@@ -37,13 +37,9 @@ public class AsynchronousClient {
             // Establish the remote endpoint for the socket.  
             // The name of the
             // remote device is "host.contoso.com".  
-            IPHostEntry ipHostInfo = Dns.GetHostEntry("host.contoso.com");  
-            IPAddress ipAddress = ipHostInfo.AddressList[0];  
-            IPEndPoint remoteEP = new IPEndPoint(ipAddress, port);  
-  
-            // Create a TCP/IP socket.  
-            Socket client = new Socket(ipAddress.AddressFamily,  
-                SocketType.Stream, ProtocolType.Tcp);  
+            IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8080);
+
+            Socket client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
   
             // Connect to the remote endpoint.  
             client.BeginConnect( remoteEP,
