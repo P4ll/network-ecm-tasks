@@ -14,7 +14,7 @@ namespace SocketLibTester.SocketHelpers
         public Socket StateSocket { get; set; } = null;
         public int BufferMaxSize { get; private set; }
         public byte[] Buffer { get; set; }
-        public StringBuilder StringBuffer { get; set; }
+        public StringBuilder StringBuffer { get; set; } = new StringBuilder();
         public Client StateClient { get; private set; } = null;
         public AsyncServer StateServer { get; private set; } = null;
         
@@ -37,7 +37,7 @@ namespace SocketLibTester.SocketHelpers
             StateClient = client;
         }
 
-        public State(int buffMaxSize, ref AsyncServer server)
+        public State(int buffMaxSize, AsyncServer server)
         {
             BufferMaxSize = buffMaxSize;
             Buffer = new byte[BufferMaxSize];

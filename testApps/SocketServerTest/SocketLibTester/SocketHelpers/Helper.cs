@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace SocketLibTester.SocketHelpers
 {
@@ -14,11 +15,10 @@ namespace SocketLibTester.SocketHelpers
         public static void AcceptCallback(IAsyncResult ar)
         {
             AsyncServer.AllDone.Set();
-
-            Socket listener = (Socket)ar.AsyncState;
+            State state = (State)ar.AsyncState;
+            Socket listener = state.StateSocket;
             Socket handler = listener.EndAccept(ar);
 
-            State state = new State();
             state.StateSocket = handler;
             handler.BeginReceive(state.Buffer, 0, state.BufferMaxSize, 0,
                 new AsyncCallback(ReadCallback), state);
@@ -43,7 +43,18 @@ namespace SocketLibTester.SocketHelpers
                 {
                     Console.WriteLine("Read {0} bytes from socket. \n Data : {1}",
                         content.Length, content);
+                    string[] cmdParts = content.Split(' ');
+                    cmdParts[0].ToLower();
+
+                    for (int i = 0; i < state.StateServer.Commands.Length; ++i)
+                    {
+                        if (cmdParts[0] == state.StateServer.Commands[i].Cmd)
+                        {
+                            content = state.StateServer.Commands[i].GetRespose(state, cmdParts);
+                        }
+                    }
                     Send(handler, content);
+
                 }
                 else
                 {

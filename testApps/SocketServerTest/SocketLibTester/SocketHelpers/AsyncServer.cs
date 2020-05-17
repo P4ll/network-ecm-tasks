@@ -13,6 +13,7 @@ namespace SocketLibTester.SocketHelpers
     {
         public string Ip { get; private set; } = "127.0.0.1";
         public int Port { get; private set; } = 8080;
+        public Command[] Commands { get; private set; }
 
         public static ManualResetEvent AllDone { get; private set; } = new ManualResetEvent(false);
 
@@ -26,6 +27,11 @@ namespace SocketLibTester.SocketHelpers
         {
             Ip = ip;
             Port = port;
+        }
+
+        public AsyncServer(Command[] cmds)
+        {
+            Commands = cmds;
         }
 
         public void Start()
@@ -46,9 +52,11 @@ namespace SocketLibTester.SocketHelpers
                         AllDone.Reset();
 
                         Console.WriteLine("Waiting for a connection...");
+                        State state = new State(1024, this);
+                        state.StateSocket = listener;
                         listener.BeginAccept(
                             new AsyncCallback(Helper.AcceptCallback),
-                            listener);
+                            state);
 
                         AllDone.WaitOne();
                     }
