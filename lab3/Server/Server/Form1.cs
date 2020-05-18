@@ -44,6 +44,12 @@ namespace Server
                     {
                         return $"hello variant {parts[1]}";
                     }),
+                    new Command("bye", true, (state, parts) =>
+                    {
+                        if (parts.Length == 1)
+                            return "bye";
+                        return $"bye variant {parts[1]}";
+                    }),
                 });
 
                 _token = new CancellationTokenSource();

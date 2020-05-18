@@ -10,11 +10,19 @@ namespace SocketLibTester.SocketHelpers
     {
         public string Cmd { get; set; }
         public delegate string Handler(State state, string[] parts);
+        public bool IsCloseCommand { get; private set; } = false;
         private Handler _handler;
 
         public Command(string cmd, Handler handler)
         {
             Cmd = cmd;
+            _handler = handler;
+        }
+
+        public Command(string cmd, bool isCloseCmd, Handler handler)
+        {
+            Cmd = cmd;
+            IsCloseCommand = isCloseCmd;
             _handler = handler;
         }
 

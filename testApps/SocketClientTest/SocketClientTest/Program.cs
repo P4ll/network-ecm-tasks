@@ -52,7 +52,7 @@ public class AsynchronousClient
 
             string input = Console.ReadLine();
             // Send test data to the remote device.  
-            Send(client, $"{input}<EOF>");
+            Send(client, $"{input}{(char)16}");
             sendDone.WaitOne();
 
             // Receive the response from the remote device.  

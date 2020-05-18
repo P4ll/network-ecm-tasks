@@ -48,37 +48,37 @@ namespace SocketLibTester.SocketHelpers
 
         public void Start(CancellationToken ct)
         {
-                IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Parse(Ip), Port);
+            IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Parse(Ip), Port);
 
-                _listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            _listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            addLog("Сервер готов к подключениям");
 
-                try
+            try
+            {
+                _listener.Bind(localEndPoint);
+                _listener.Listen(100);
+
+                while (true)
                 {
-                    _listener.Bind(localEndPoint);
-                    _listener.Listen(100);
+                    AllDone.Reset();
 
-                    while (true)
+                    State state = new State(1024, this);
+                    state.StateSocket = _listener;
+                    _listener.BeginAccept(
+                        new AsyncCallback(Helper.AcceptCallback),
+                        state);
+                    AllDone.WaitOne();
+                    if (ct.IsCancellationRequested)
                     {
-                        AllDone.Reset();
-
-                        addLog("Ожидание подключения...");
-                        State state = new State(1024, this);
-                        state.StateSocket = _listener;
-                        _listener.BeginAccept(
-                            new AsyncCallback(Helper.AcceptCallback),
-                            state);
-                        AllDone.WaitOne();
-                        if (ct.IsCancellationRequested)
-                        {
-                            state.StateServer.Ip = "";
-                            break;
-                        }
+                        state.StateServer.Ip = "";
+                        break;
                     }
                 }
-                catch (Exception e)
-                {
-                    addLog(e.ToString());
-                }
+            }
+            catch (Exception e)
+            {
+                addLog(e.ToString());
+            }
         }
 
         public void Stop()

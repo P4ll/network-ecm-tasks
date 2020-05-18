@@ -22,6 +22,7 @@ namespace SocketLibTester.SocketHelpers
             Socket handler = listener.EndAccept(ar);
 
             state.StateSocket = handler;
+            state.StateServer.addLog("Соединение с клиентом установлено");
             handler.BeginReceive(state.Buffer, 0, state.BufferMaxSize, 0,
                 new AsyncCallback(ReadCallback), state);
         }
@@ -41,9 +42,12 @@ namespace SocketLibTester.SocketHelpers
                     state.Buffer, 0, bytesRead));
 
                 content = state.StringBuffer.ToString();
-                if (content.IndexOf("<EOF>") > -1)
+
+                if (content.IndexOf("\r\n") > -1)
                 {
-                    state.StateServer.addLog(String.Format("Read {0} bytes from socket. \n Data : {1}",
+                    content = content.Trim('\n');
+                    content = content.Trim('\r');
+                    state.StateServer.addLog(String.Format("Пришло {0} байт. \n Данные: {1}",
                         content.Length, content));
                     string[] cmdParts = content.Split(' ');
                     cmdParts[0].ToLower();
@@ -53,9 +57,11 @@ namespace SocketLibTester.SocketHelpers
                         if (cmdParts[0] == state.StateServer.Commands[i].Cmd)
                         {
                             content = state.StateServer.Commands[i].GetRespose(state, cmdParts);
+                            state.LastCommad = state.StateServer.Commands[i];
+                            break;
                         }
                     }
-                    Send(handler, content);
+                    Send(state, content);
 
                 }
                 else
@@ -66,120 +72,41 @@ namespace SocketLibTester.SocketHelpers
             }
         }
 
-        public static void Send(Socket handler, String data)
+        public static void Send(State state, String data)
         {
-            byte[] byteData = Encoding.ASCII.GetBytes(data);
+
+            byte[] byteData = Encoding.ASCII.GetBytes(data + "\r\n");
+
+            Socket handler = state.StateSocket;
 
             handler.BeginSend(byteData, 0, byteData.Length, 0,
-                new AsyncCallback(SendCallback), handler);
+                new AsyncCallback(SendCallback), state);
         }
 
         public static void SendCallback(IAsyncResult ar)
         {
             try
             {
-                Socket handler = (Socket)ar.AsyncState;
+                State state = (State)ar.AsyncState;
+                Socket handler = state.StateSocket;
 
                 int bytesSent = handler.EndSend(ar);
-                Console.WriteLine("Sent {0} bytes to client.", bytesSent);
 
-                handler.Shutdown(SocketShutdown.Both);
-                handler.Close();
-
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.ToString());
-            }
-        }
-
-        public static void SendClient(Socket handler, String data)
-        {
-            byte[] byteData = Encoding.ASCII.GetBytes(data);
-
-            handler.BeginSend(byteData, 0, byteData.Length, 0,
-                new AsyncCallback(SendCallbackClient), handler);
-        }
-
-        public static void SendCallbackClient(IAsyncResult ar)
-        {
-            try
-            {
-                Socket client = (Socket)ar.AsyncState;
-
-                int bytesSent = client.EndSend(ar);
-                Console.WriteLine("Sent {0} bytes to server.", bytesSent);
-
-                Client.SendDone.Set();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.ToString());
-            }
-        }
-
-        public static void ConnectCallback(IAsyncResult ar)
-        {
-            try
-            {
-                Socket client = (Socket)ar.AsyncState;
-
-                client.EndConnect(ar);
-
-                Console.WriteLine("Socket connected to {0}",
-                    client.RemoteEndPoint.ToString());
-
-                Client.ConnectDone.Set();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.ToString());
-            }
-        }
-
-        public static void Receive(ref State state)
-        {
-            try
-            {
-                state.StateSocket.BeginReceive(state.Buffer, 0, state.BufferMaxSize, 0,
-                    new AsyncCallback(ReceiveCallback), state);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.ToString());
-            }
-        }
-
-        public static void ReceiveCallback(IAsyncResult ar)
-        {
-            try
-            {
-                State state = (State)ar.AsyncState;
-                Socket client = state.StateSocket;
-
-                int bytesRead = client.EndReceive(ar);
-
-                if (bytesRead > 0)
+                state.StateServer.addLog($"Сообщение({bytesSent} байт) отправлено клиенту");
+                state.StringBuffer.Clear();
+                if (state.LastCommad != null && state.LastCommad.IsCloseCommand)
                 {
-                    state.StringBuffer.Append(Encoding.ASCII.GetString(state.Buffer, 0, bytesRead));
-
-                    client.BeginReceive(state.Buffer, 0, state.BufferMaxSize, 0,
-                        new AsyncCallback(ReceiveCallback), state);
+                    handler.Shutdown(SocketShutdown.Receive);
+                    handler.Close();
+                    return;
                 }
-                else
-                {
-                    if (state.StringBuffer.Length > 1)
-                    {
-                        Console.WriteLine($"Response: {state.StringBuffer.ToString()}");
-                    }
-                    Client.ReceiveDone.Set();
-                }
+                handler.BeginReceive(state.Buffer, 0, state.BufferMaxSize, 0,
+                    new AsyncCallback(ReadCallback), state);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
         }
-
     }
 }

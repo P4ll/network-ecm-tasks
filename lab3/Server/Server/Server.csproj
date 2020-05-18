@@ -55,7 +55,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SocketHelpers\AsyncServer.cs" />
-    <Compile Include="SocketHelpers\Client.cs" />
     <Compile Include="SocketHelpers\Command.cs" />
     <Compile Include="SocketHelpers\Helper.cs" />
     <Compile Include="SocketHelpers\State.cs" />
