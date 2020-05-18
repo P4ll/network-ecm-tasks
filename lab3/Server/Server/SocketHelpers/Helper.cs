@@ -17,6 +17,8 @@ namespace SocketLibTester.SocketHelpers
             AsyncServer.AllDone.Set();
             State state = (State)ar.AsyncState;
             Socket listener = state.StateSocket;
+            if (state.StateServer.Ip == "")
+                return;
             Socket handler = listener.EndAccept(ar);
 
             state.StateSocket = handler;
@@ -41,8 +43,8 @@ namespace SocketLibTester.SocketHelpers
                 content = state.StringBuffer.ToString();
                 if (content.IndexOf("<EOF>") > -1)
                 {
-                    Console.WriteLine("Read {0} bytes from socket. \n Data : {1}",
-                        content.Length, content);
+                    state.StateServer.addLog(String.Format("Read {0} bytes from socket. \n Data : {1}",
+                        content.Length, content));
                     string[] cmdParts = content.Split(' ');
                     cmdParts[0].ToLower();
 

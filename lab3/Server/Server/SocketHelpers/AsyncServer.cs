@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace SocketLibTester.SocketHelpers
 {
@@ -16,8 +17,11 @@ namespace SocketLibTester.SocketHelpers
         public Command[] Commands { get; private set; }
 
         public static ManualResetEvent AllDone { get; private set; } = new ManualResetEvent(false);
+        public delegate void AddLogDelegate(string msg);
+        public AddLogDelegate addLog;
 
         private Thread _thread;
+        Socket _listener;
 
         public AsyncServer()
         {
@@ -34,45 +38,54 @@ namespace SocketLibTester.SocketHelpers
             Commands = cmds;
         }
 
-        public void Start()
+        public AsyncServer(string ip, int port, AddLogDelegate addLog, Command[] cmds)
         {
-            _thread = new Thread(() =>
-            {
+            Ip = ip;
+            Port = port;
+            Commands = cmds;
+            this.addLog = addLog;
+        }
+
+        public void Start(CancellationToken ct)
+        {
                 IPEndPoint localEndPoint = new IPEndPoint(IPAddress.Parse(Ip), Port);
 
-                Socket listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                _listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
                 try
                 {
-                    listener.Bind(localEndPoint);
-                    listener.Listen(100);
+                    _listener.Bind(localEndPoint);
+                    _listener.Listen(100);
 
                     while (true)
                     {
                         AllDone.Reset();
 
-                        Console.WriteLine("Waiting for a connection...");
+                        addLog("Ожидание подключения...");
                         State state = new State(1024, this);
-                        state.StateSocket = listener;
-                        listener.BeginAccept(
+                        state.StateSocket = _listener;
+                        _listener.BeginAccept(
                             new AsyncCallback(Helper.AcceptCallback),
                             state);
-
                         AllDone.WaitOne();
+                        if (ct.IsCancellationRequested)
+                        {
+                            state.StateServer.Ip = "";
+                            break;
+                        }
                     }
-
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e.ToString());
+                    addLog(e.ToString());
                 }
-            });
-            _thread.Start();
         }
 
         public void Stop()
         {
-            _thread.Abort();
+            //_listener.Shutdown(SocketShutdown.Both);
+            _listener.Close();
+            addLog("Подключение деактивировано");
         }
     }
 }

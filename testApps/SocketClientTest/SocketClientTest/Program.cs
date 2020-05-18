@@ -128,6 +128,7 @@ public class AsynchronousClient
                 // There might be more data, so store the data received so far.  
                 state.sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
 
+                response = state.sb.ToString();
                 // Get the rest of the data.  
                 client.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
                     new AsyncCallback(ReceiveCallback), state);
@@ -138,6 +139,7 @@ public class AsynchronousClient
                 if (state.sb.Length > 1)
                 {
                     response = state.sb.ToString();
+                    Console.WriteLine(response);
                 }
                 // Signal that all bytes have been received.  
                 receiveDone.Set();
