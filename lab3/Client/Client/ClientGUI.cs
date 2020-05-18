@@ -16,26 +16,31 @@ namespace Client
         public string Ip { get; private set; }
         public int Port { get; private set; }
 
-        public delegate void SafeCallDelegate(string msg);
-
-        private SafeCallDelegate addMainConsole;
-
         private SocketLibTester.SocketHelpers.Client _client;
 
-        public ClientGUI(string ip, int port, SafeCallDelegate addMainConsole)
+        public ClientGUI(string ip, int port, SocketLibTester.SocketHelpers.Client.AddLogDelegate addMainConsole)
         {
             InitializeComponent();
             Ip = ip;
             Port = port;
             labelIP.Text = Ip;
             portLabel.Text = Port.ToString();
-            this.addMainConsole = addMainConsole;
+            _client = new SocketLibTester.SocketHelpers.Client(Ip, Port);
+            _client.AddLog = AddClientLog;
+            _client.AddMainLog = addMainConsole;
+        }
+
+        public ClientGUI(SocketLibTester.SocketHelpers.Client client, SocketLibTester.SocketHelpers.Client.AddLogDelegate addMainConsole)
+        {
+            InitializeComponent();
+            _client = client;
+            _client.AddMainLog = addMainConsole;
+            _client.AddLog = AddClientLog;
         }
 
         public void Start()
         {
-            _client = new SocketLibTester.SocketHelpers.Client(Ip, Port);
-            _client.Start();
+            _client.Start(this);
         }
 
         private void btnEnter_Click(object sender, EventArgs e)
@@ -55,7 +60,7 @@ namespace Client
         {
             if (consoleTextBox.InvokeRequired)
             {
-                SafeCallDelegate d = new SafeCallDelegate(AddClientLog);
+                SocketLibTester.SocketHelpers.Client.AddLogDelegate d = new SocketLibTester.SocketHelpers.Client.AddLogDelegate(AddClientLog);
                 consoleTextBox.Invoke(d, new object[] { msg });
             }
             else

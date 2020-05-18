@@ -27,16 +27,14 @@ namespace Client
 
             if (ip != "" && port != -1)
             {
-                ClientGUI clientGUI = new ClientGUI(ip, port, AddLog);
-                clientGUI.Show();
-                clientGUI.Start();
-                //Thread thread = new Thread(() => {
-
-                //    ClientGUI clientGUI = new ClientGUI(ip, port, AddLog);
-                //    clientGUI.Show();
-                //    clientGUI.Start();
-                //});
-                //thread.Start();
+                Thread thread = new Thread(() =>
+                {
+                    SocketLibTester.SocketHelpers.Client client = new SocketLibTester.SocketHelpers.Client(ip, port);
+                    ClientGUI clientGUI = new ClientGUI(client, AddLog);
+                    clientGUI.Start();
+                    //clientGUI.Show();
+                });
+                thread.Start();
             }
 
         }

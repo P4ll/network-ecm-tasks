@@ -6,10 +6,11 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace SocketLibTester.SocketHelpers
 {
-    class Client
+    public class Client
     {
         public static ManualResetEvent ConnectDone { get; private set; } = new ManualResetEvent(false);
         public static ManualResetEvent SendDone { get; private set; } = new ManualResetEvent(false);
@@ -17,6 +18,11 @@ namespace SocketLibTester.SocketHelpers
 
         public string Ip { get; private set; } = "127.0.0.1";
         public int Port { get; private set; } = 8080;
+
+        public delegate void AddLogDelegate(string msg);
+        public AddLogDelegate AddMainLog { get; set; }
+        public AddLogDelegate AddLog { get; set; }
+        public bool IsConnected { get; set; }
 
         private IPEndPoint _remoteEP;
         private Socket _client;
@@ -29,15 +35,18 @@ namespace SocketLibTester.SocketHelpers
             Port = port;
         }
 
-        public void Start()
+        public void Start(Form form)
         {
             try
             {
                 _remoteEP = new IPEndPoint(IPAddress.Parse(Ip), Port);
                 _client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                State state = new State(1024, this);
+                state.StateSocket = _client;
 
-                _client.BeginConnect(_remoteEP, new AsyncCallback(Helper.ConnectCallback), _client);
+                _client.BeginConnect(_remoteEP, new AsyncCallback(Helper.ConnectCallback), state);
                 ConnectDone.WaitOne();
+                form.Show();
             }
             catch (SocketException e)
             {
@@ -53,11 +62,11 @@ namespace SocketLibTester.SocketHelpers
         {
             try
             {
-                Helper.SendClient(_client, $"{msg}<EOF>");
-                SendDone.WaitOne();
-
                 State state = new State(1024, this);
                 state.StateSocket = _client;
+
+                Helper.SendClient(state, msg);
+                SendDone.WaitOne();
 
                 Helper.Receive(ref state);
                 ReceiveDone.WaitOne();
