@@ -95,14 +95,6 @@ namespace SocketLibTester.SocketHelpers
 
                     if (state.StringBuffer.ToString().IndexOf("\r\n") > -1)
                     {
-                        //Task task = Task.Factory.StartNew(() =>
-                        //{
-                        //    string recMsg = state.StringBuffer.ToString();
-                        //    recMsg = recMsg.Trim('\n');
-                        //    recMsg = recMsg.Trim('\r');
-                        //    state.StringBuffer.Clear();
-                        //    state.StateClient.AddLog(recMsg);
-                        //});
                         string recMsg = state.StringBuffer.ToString();
                         recMsg = recMsg.Trim('\n');
                         recMsg = recMsg.Trim('\r');
@@ -125,7 +117,6 @@ namespace SocketLibTester.SocketHelpers
             }
             catch (Exception e)
             {
-                state.StateClient.AddLog("Не удалось получить данные с сервера");
             }
         }
 
