@@ -23,7 +23,7 @@ namespace Client
 
         private static void applicationRunProc(object state)
         {
-            ClientGUI client = (ClientGUI)state;
+            GUI.ClientGUI client = (GUI.ClientGUI)state;
             client.Start();
             Application.Run(client);
         }
@@ -38,7 +38,7 @@ namespace Client
                 Thread thread = new Thread(applicationRunProc);
                 thread.SetApartmentState(ApartmentState.STA);
                 thread.IsBackground = false;
-                thread.Start(new ClientGUI(ip, port, AddLog));
+                thread.Start(new GUI.ClientGUI(ip, port, AddLog));
                 //_threads.Add(new Thread(() =>
                 //{
                 //    SocketLibTester.SocketHelpers.Client client = new SocketLibTester.SocketHelpers.Client(ip, port);

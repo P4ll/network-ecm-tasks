@@ -1,4 +1,4 @@
-﻿namespace Client
+﻿namespace Client.GUI
 {
     partial class ClientGUI
     {

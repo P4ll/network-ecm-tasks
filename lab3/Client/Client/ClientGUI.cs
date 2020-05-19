@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using SocketLibTester.SocketHelpers;
 
-namespace Client
+namespace Client.GUI
 {
     public partial class ClientGUI : Form
     {

@@ -55,6 +55,8 @@ namespace SocketLibTester.SocketHelpers
             catch (Exception e)
             {
                 state.StateClient.AddMainLog("Ошибка соединения с сервером");
+                if (state.StateForm != null && state.StateForm.IsAccessible)
+                    state.StateForm.SafeClose();
             }
         }
 

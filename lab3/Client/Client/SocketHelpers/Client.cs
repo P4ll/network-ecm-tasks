@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Net.Configuration;
+using Client.GUI;
 
 namespace SocketLibTester.SocketHelpers
 {
@@ -24,7 +25,7 @@ namespace SocketLibTester.SocketHelpers
         public AddLogDelegate AddMainLog { get; set; }
         public AddLogDelegate AddLog { get; set; }
         public bool IsConnected { get; set; }
-        public Form ClientForm { get; private set; }
+        public ClientGUI ClientForm { get; private set; }
 
         private IPEndPoint _remoteEP;
         private Socket _client;
@@ -37,7 +38,7 @@ namespace SocketLibTester.SocketHelpers
             Port = port;
         }
 
-        public void Start(Form form)
+        public void Start(ClientGUI form)
         {
             try
             {
@@ -45,12 +46,13 @@ namespace SocketLibTester.SocketHelpers
                 _client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 State state = new State(1024, this);
                 state.StateSocket = _client;
+                state.StateForm = form;
                 ClientForm = form;
 
                 _client.BeginConnect(_remoteEP, new AsyncCallback(Helper.ConnectCallback), state);
                 ConnectDone.WaitOne();
                 if (_client.Connected)
-                    form.ShowDialog();
+                    form.Show();
             }
             catch (SocketException e)
             {
@@ -68,6 +70,7 @@ namespace SocketLibTester.SocketHelpers
             {
                 State state = new State(1024, this);
                 state.StateSocket = _client;
+                state.StateForm = ClientForm;
 
                 consoleInput.Text = "";
                 AddLog(msg.Trim('\n').Trim('\r'));
@@ -77,17 +80,19 @@ namespace SocketLibTester.SocketHelpers
 
                 state = new State(1024, this);
                 state.StateSocket = _client;
+                state.StateForm = ClientForm;
 
                 Helper.Receive(ref state);
                 ReceiveDone.WaitOne();
                 state.StringBuffer.Clear();
 
-                if (!state.StateSocket.Connected)
+                if (!state.StateSocket.Connected || msg.Split(' ')[0].ToLower().Trim('\n').Trim('\r') == "bye")
                 {
                     AddLog("Соединение закрыто, через 2 секунды окно закроется");
                     Task.Factory.StartNew(async () =>
                     {
                         await Task.Delay(2000);
+                        ClientForm.SafeClose();
                     });
                 }
 
