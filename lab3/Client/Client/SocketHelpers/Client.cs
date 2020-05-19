@@ -7,6 +7,7 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Net.Configuration;
 
 namespace SocketLibTester.SocketHelpers
 {
@@ -23,6 +24,7 @@ namespace SocketLibTester.SocketHelpers
         public AddLogDelegate AddMainLog { get; set; }
         public AddLogDelegate AddLog { get; set; }
         public bool IsConnected { get; set; }
+        public Form ClientForm { get; private set; }
 
         private IPEndPoint _remoteEP;
         private Socket _client;
@@ -43,10 +45,12 @@ namespace SocketLibTester.SocketHelpers
                 _client = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 State state = new State(1024, this);
                 state.StateSocket = _client;
+                ClientForm = form;
 
                 _client.BeginConnect(_remoteEP, new AsyncCallback(Helper.ConnectCallback), state);
                 ConnectDone.WaitOne();
-                form.Show();
+                if (_client.Connected)
+                    form.ShowDialog();
             }
             catch (SocketException e)
             {
@@ -58,18 +62,34 @@ namespace SocketLibTester.SocketHelpers
             }
         }
 
-        public string SendMessage(string msg)
+        public string SendMessage(string msg, TextBox consoleInput)
         {
             try
             {
                 State state = new State(1024, this);
                 state.StateSocket = _client;
 
+                consoleInput.Text = "";
+                AddLog(msg.Trim('\n').Trim('\r'));
+
                 Helper.SendClient(state, msg);
                 SendDone.WaitOne();
 
+                state = new State(1024, this);
+                state.StateSocket = _client;
+
                 Helper.Receive(ref state);
                 ReceiveDone.WaitOne();
+                state.StringBuffer.Clear();
+
+                if (!state.StateSocket.Connected)
+                {
+                    AddLog("Соединение закрыто, через 2 секунды окно закроется");
+                    Task.Factory.StartNew(async () =>
+                    {
+                        await Task.Delay(2000);
+                    });
+                }
 
                 return state.StringBuffer.ToString();
             }

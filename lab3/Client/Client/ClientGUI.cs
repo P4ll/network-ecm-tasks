@@ -16,6 +16,9 @@ namespace Client
         public string Ip { get; private set; }
         public int Port { get; private set; }
 
+        private delegate void SafeCallDelegate(string msg);
+        private delegate void SafeCloseDelegate();
+
         private SocketLibTester.SocketHelpers.Client _client;
 
         public ClientGUI(string ip, int port, SocketLibTester.SocketHelpers.Client.AddLogDelegate addMainConsole)
@@ -33,6 +36,10 @@ namespace Client
         public ClientGUI(SocketLibTester.SocketHelpers.Client client, SocketLibTester.SocketHelpers.Client.AddLogDelegate addMainConsole)
         {
             InitializeComponent();
+            Ip = client.Ip;
+            Port = client.Port;
+            labelIP.Text = Ip;
+            portLabel.Text = Port.ToString();
             _client = client;
             _client.AddMainLog = addMainConsole;
             _client.AddLog = AddClientLog;
@@ -45,7 +52,7 @@ namespace Client
 
         private void btnEnter_Click(object sender, EventArgs e)
         {
-            _client.SendMessage(inputTextBox.Text);
+            _client.SendMessage(inputTextBox.Text, inputTextBox);
         }
 
         private void inputTextBox_KeyPress(object sender, KeyPressEventArgs e)
@@ -58,14 +65,29 @@ namespace Client
 
         public void AddClientLog(string msg)
         {
+            if (msg == "") return;
+
             if (consoleTextBox.InvokeRequired)
             {
-                SocketLibTester.SocketHelpers.Client.AddLogDelegate d = new SocketLibTester.SocketHelpers.Client.AddLogDelegate(AddClientLog);
+                SafeCallDelegate d = new SafeCallDelegate(AddClientLog);
                 consoleTextBox.Invoke(d, new object[] { msg });
             }
             else
             {
                 consoleTextBox.Text += $"[{DateTime.Now.ToString("HH:mm:ss")}]: {msg}\n";
+            }
+        }
+
+        public void SafeClose()
+        {
+            if (this.InvokeRequired)
+            {
+                SafeCloseDelegate d = new SafeCloseDelegate(SafeClose);
+                this.Invoke(d);
+            }
+            else
+            {
+                this.Close();
             }
         }
     }

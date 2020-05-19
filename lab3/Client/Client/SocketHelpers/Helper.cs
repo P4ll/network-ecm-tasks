@@ -14,6 +14,7 @@ namespace SocketLibTester.SocketHelpers
     {
         public static void SendClient(State state, String data)
         {
+            state.StringBuffer.Clear();
             state.StringBuffer.Append(data);
             byte[] byteData = Encoding.ASCII.GetBytes(data + "\r\n");
 
@@ -29,7 +30,6 @@ namespace SocketLibTester.SocketHelpers
                 Socket client = state.StateSocket;
 
                 int bytesSent = client.EndSend(ar);
-                state.StateClient.AddLog(state.StringBuffer.ToString());
 
                 Client.SendDone.Set();
             }
@@ -62,6 +62,8 @@ namespace SocketLibTester.SocketHelpers
         {
             try
             {
+                state.StringBuffer.Clear();
+
                 state.StateSocket.BeginReceive(state.Buffer, 0, state.BufferMaxSize, 0,
                     new AsyncCallback(ReceiveCallback), state);
             }
@@ -84,16 +86,29 @@ namespace SocketLibTester.SocketHelpers
                 {
                     state.StringBuffer.Append(Encoding.ASCII.GetString(state.Buffer, 0, bytesRead));
 
+                    if (state.StringBuffer.ToString().IndexOf("\r\n") > -1)
+                    {
+                        Task task = Task.Factory.StartNew(() =>
+                        {
+                            string recMsg = state.StringBuffer.ToString();
+                            recMsg = recMsg.Trim('\n');
+                            recMsg = recMsg.Trim('\r');
+                            state.StringBuffer.Clear();
+                            state.StateClient.AddLog(recMsg);
+                        });
+                        Client.ReceiveDone.Set();
+                    }
+
                     client.BeginReceive(state.Buffer, 0, state.BufferMaxSize, 0,
                         new AsyncCallback(ReceiveCallback), state);
                 }
                 else
                 {
-                    if (state.StringBuffer.Length > 1)
-                    {
-                        state.StateClient.AddLog(state.StringBuffer.ToString());
-                    }
+                    //if (state.StringBuffer.Length > 1)
+                    //{
+                    //}
                     Client.ReceiveDone.Set();
+                    state.StateClient.AddLog(state.StringBuffer.ToString());
                 }
             }
             catch (Exception e)
