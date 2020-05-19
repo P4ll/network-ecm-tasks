@@ -22,6 +22,7 @@ namespace SocketLibTester.SocketHelpers
 
         private Thread _thread;
         Socket _listener;
+        private State _currState;
 
         public AsyncServer()
         {
@@ -64,6 +65,7 @@ namespace SocketLibTester.SocketHelpers
 
                     State state = new State(1024, this);
                     state.StateSocket = _listener;
+                    _currState = state;
                     _listener.BeginAccept(
                         new AsyncCallback(Helper.AcceptCallback),
                         state);
@@ -83,8 +85,20 @@ namespace SocketLibTester.SocketHelpers
 
         public void Stop()
         {
+            try
+            {
+                _listener.Shutdown(SocketShutdown.Both);
+            }
+            catch (Exception e) { }
+            finally
+            {
+                _listener.Close();
+            }
             //_listener.Shutdown(SocketShutdown.Both);
-            _listener.Close();
+            //if (_currState == null)
+            //    _listener.Close();
+            //else
+            //    _currState.StateSocket.Close();
             addLog("Подключение деактивировано");
         }
     }

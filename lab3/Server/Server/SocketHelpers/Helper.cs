@@ -32,6 +32,13 @@ namespace SocketLibTester.SocketHelpers
             String content = String.Empty;
 
             State state = (State)ar.AsyncState;
+            if (state.StateServer.Ip == "")
+            {
+                state.StateSocket.Shutdown(SocketShutdown.Both);
+                state.StateSocket.Close();
+                return;
+            }
+
             try
             {
                 Socket handler = state.StateSocket;
