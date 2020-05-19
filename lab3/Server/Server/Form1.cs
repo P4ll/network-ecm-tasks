@@ -50,6 +50,14 @@ namespace Server
                             return "bye";
                         return $"bye variant {parts[1]}";
                     }),
+                    //new Command("help", true, (state, parts) =>
+                    //{
+                    //    string help = "hello <n> - команда приветствия, <n> - номер варианта\n" +
+                    //    "bye <n> - вызывает разрыв соединения, <n> - номер варианта при прощании\n" +
+                    //    "encrypt -p <pass> <message> - зашифрует данные" +
+                    //    "decrypt -p <pass> <message> - расшифрует данные";
+                    //    return help;
+                    //}),
                 });
 
                 _token = new CancellationTokenSource();
