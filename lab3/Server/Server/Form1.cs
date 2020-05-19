@@ -9,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using crypto_test;
 using SocketLibTester.SocketHelpers;
 
 namespace Server
@@ -50,14 +51,106 @@ namespace Server
                             return "bye";
                         return $"bye variant {parts[1]}";
                     }),
-                    //new Command("help", true, (state, parts) =>
-                    //{
-                    //    string help = "hello <n> - команда приветствия, <n> - номер варианта\n" +
-                    //    "bye <n> - вызывает разрыв соединения, <n> - номер варианта при прощании\n" +
-                    //    "encrypt -p <pass> <message> - зашифрует данные" +
-                    //    "decrypt -p <pass> <message> - расшифрует данные";
-                    //    return help;
-                    //}),
+                    new Command("encrypt", (state, parts) =>
+                    {
+                        string pass = "";
+                        string text = "";
+                        bool isFile = false;
+                        for (int i = 1; i < parts.Length; ++i)
+                        {
+                            if (parts[i] == "-f")
+                            {
+                                isFile = true;
+                            }
+                            else if (parts[i] == "-p")
+                            {
+                                if (i + 1 == parts.Length)
+                                {
+                                    return "Wrong cmd: use encrypt [-p] <pass> <message>";
+                                }
+                                else
+                                {
+                                    pass = parts[i + 1];
+                                    ++i;
+                                }
+                            }
+                            else if (pass != "")
+                            {
+                                StringBuilder sb = new StringBuilder();
+                                for (int j = i; j < parts.Length; ++j)
+                                {
+                                    sb.Append(parts[j]);
+                                }
+                                text = sb.ToString();
+                                break;
+                            }
+                        }
+                        if (pass != "" && text != "")
+                        {
+                            MD5Hash hasher = new MD5Hash();
+                            pass = hasher.GetHash(pass, true);
+                            AES aes = new AES();
+                            text = aes.Encrypt(text, pass, !isFile);
+                            return text;
+                        }
+                        else
+                        {
+                            return "Wrong cmd: use encrypt [-p] <pass> <message>";
+                        }
+                    }),
+                    new Command("decrypt", (state, parts) =>
+                    {
+                        string pass = "";
+                        string text = "";
+                        bool isFile = false;
+                        for (int i = 1; i < parts.Length; ++i)
+                        {
+                            if (parts[i] == "-f")
+                            {
+                                isFile = true;
+                            }
+                            else if (parts[i] == "-p")
+                            {
+                                if (i + 1 == parts.Length)
+                                {
+                                    return "Wrong cmd: use encrypt [-p] <pass> <message>";
+                                }
+                                else
+                                {
+                                    pass = parts[i + 1];
+                                    ++i;
+                                }
+                            }
+                            else if (pass != "")
+                            {
+                                StringBuilder sb = new StringBuilder();
+                                for (int j = i; j < parts.Length; ++j)
+                                {
+                                    sb.Append(parts[j]);
+                                }
+                                text = sb.ToString();
+                                break;
+                            }
+                        }
+                        if (pass != "" && text != "")
+                        {
+                            MD5Hash hasher = new MD5Hash();
+                            pass = hasher.GetHash(pass, true);
+                            AES aes = new AES();
+                            text = aes.Decrypt(text, pass);
+                            return text;
+                        }
+                        else
+                        {
+                            return "Wrong cmd: use encrypt [-p] <pass> <message>";
+                        }
+
+                    }),
+                    new Command("help", (state, parts) =>
+                    {
+                        string help = "hello <n>, bye <n>, [encrypt | decrypt] -p <pass> <text>";
+                        return help;
+                    }),
                 });
 
                 _token = new CancellationTokenSource();
