@@ -113,8 +113,7 @@ namespace crypto_test {
 
         public string Decrypt(string text, string pass) {
             if (text.Length % 32 != 0) {
-                MessageBox.Show("Сообщение не было зашифровано этим алгоритмом");
-                return text;
+                return "Can't decrypt";
             }
             // byte[] bytes = Encoding.Default.GetBytes(text);
             byte[] bytes = GetBytesFromHash(text);

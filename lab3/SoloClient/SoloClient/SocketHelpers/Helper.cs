@@ -48,15 +48,20 @@ namespace SocketLibTester.SocketHelpers
 
                 client.EndConnect(ar);
 
-                state.StateClient.AddMainLog($"Клиент подключен к {client.LocalEndPoint}");
-
+                Task.Factory.StartNew(() =>
+                {
+                    state.StateClient.AddMainLog($"Клиент подключен с адресом: {state.StateSocket.LocalEndPoint}");
+                    state.StateForm.SafeChangeConnection();
+                });
                 Client.ConnectDone.Set();
             }
             catch (Exception e)
             {
-                state.StateClient.AddMainLog("Ошибка соединения с сервером");
-                if (state.StateForm != null && state.StateForm.IsAccessible)
-                    state.StateForm.SafeClose();
+                Task.Factory.StartNew(() =>
+                {
+                    state.StateClient.AddMainLog("Ошибка соединения с сервером");
+                });
+                Client.ConnectDone.Set();
             }
         }
 
@@ -90,12 +95,20 @@ namespace SocketLibTester.SocketHelpers
 
                     if (state.StringBuffer.ToString().IndexOf("\r\n") > -1)
                     {
-                        Task task = Task.Factory.StartNew(() =>
+                        //Task task = Task.Factory.StartNew(() =>
+                        //{
+                        //    string recMsg = state.StringBuffer.ToString();
+                        //    recMsg = recMsg.Trim('\n');
+                        //    recMsg = recMsg.Trim('\r');
+                        //    state.StringBuffer.Clear();
+                        //    state.StateClient.AddLog(recMsg);
+                        //});
+                        string recMsg = state.StringBuffer.ToString();
+                        recMsg = recMsg.Trim('\n');
+                        recMsg = recMsg.Trim('\r');
+                        state.StringBuffer.Clear();
+                        Task.Factory.StartNew(() =>
                         {
-                            string recMsg = state.StringBuffer.ToString();
-                            recMsg = recMsg.Trim('\n');
-                            recMsg = recMsg.Trim('\r');
-                            state.StringBuffer.Clear();
                             state.StateClient.AddLog(recMsg);
                         });
                         Client.ReceiveDone.Set();
@@ -106,9 +119,6 @@ namespace SocketLibTester.SocketHelpers
                 }
                 else
                 {
-                    //if (state.StringBuffer.Length > 1)
-                    //{
-                    //}
                     Client.ReceiveDone.Set();
                     state.StateClient.AddLog(state.StringBuffer.ToString());
                 }

@@ -24,7 +24,7 @@ namespace SocketLibTester.SocketHelpers
         public delegate void AddLogDelegate(string msg);
         public AddLogDelegate AddMainLog { get; set; }
         public AddLogDelegate AddLog { get; set; }
-        public bool IsConnected { get; set; }
+        public bool IsConnected { get; set; } = false;
         public ClientGUI ClientForm { get; private set; }
 
         private IPEndPoint _remoteEP;
@@ -51,8 +51,7 @@ namespace SocketLibTester.SocketHelpers
 
                 _client.BeginConnect(_remoteEP, new AsyncCallback(Helper.ConnectCallback), state);
                 ConnectDone.WaitOne();
-                if (_client.Connected)
-                    form.Show();
+                //ConnectDone.Reset();
             }
             catch (SocketException e)
             {
@@ -109,6 +108,7 @@ namespace SocketLibTester.SocketHelpers
         {
             _client.Shutdown(SocketShutdown.Both);
             _client.Close();
+            ClientForm.SafeChangeConnection();
         }
     }
 }
