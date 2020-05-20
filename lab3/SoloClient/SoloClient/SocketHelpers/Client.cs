@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using SoloClient;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Net.Configuration;
-using SoloClient;
 
 namespace SocketLibTester.SocketHelpers
 {
@@ -51,7 +47,6 @@ namespace SocketLibTester.SocketHelpers
 
                 _client.BeginConnect(_remoteEP, new AsyncCallback(Helper.ConnectCallback), state);
                 ConnectDone.WaitOne();
-                //ConnectDone.Reset();
             }
             catch (SocketException e)
             {

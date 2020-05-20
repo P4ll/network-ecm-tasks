@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace crypto_test {
-    public class AES {
+namespace crypto_test
+{
+    public class AES
+    {
         private RichTextBox _textBox;
         private Form _form;
-        //private string _hashPass;
         private byte[] _sBox =  {0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
                                 0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
                                 0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15,
@@ -48,15 +48,17 @@ namespace crypto_test {
         public int Nr { get; set; } = 10;
         private List<byte> _keysExp;
 
-        public AES() {
+        public AES()
+        {
 
         }
 
-        public AES(ref RichTextBox textBox, ref Form form) {
+        public AES(ref RichTextBox textBox, ref Form form)
+        {
             _textBox = textBox;
             _form = form;
         }
-        
+
         /// <summary>
         /// Производит шифрование строки message с помощью хешированного пароля pass (128 бит)
         /// </summary>
@@ -65,14 +67,18 @@ namespace crypto_test {
         /// <param name="isText">Если true, сообщение будет трактоваться как текст,
         /// иначе - поток байт с побелом в качестве разделителя</param>
         /// <returns></returns>
-        public string Encrypt(string message, string pass, bool isText) {
+        public string Encrypt(string message, string pass, bool isText)
+        {
             List<byte> bytes = new List<byte>();
-            if (isText) {
+            if (isText)
+            {
                 bytes = Encoding.Default.GetBytes(message).ToList();
             }
-            else {
+            else
+            {
                 string[] bytesInStrings = message.Split(' ');
-                foreach (var ch in bytesInStrings) {
+                foreach (var ch in bytesInStrings)
+                {
                     if (ch == "" || ch == " ")
                         continue;
                     bytes.Add(Byte.Parse(ch));
@@ -89,15 +95,18 @@ namespace crypto_test {
             _keysExp = KeysExpansion(ref passInByte);
             // шифруются каждый из 128-ми битных блоков
             byte[] inputBytes = bytes.ToArray();
-            for (int i = 0; i < bytes.Count; i += 16) {
+            for (int i = 0; i < bytes.Count; i += 16)
+            {
                 EncryptBlock(ref inputBytes, i, i + 15);
             }
             return BitConverter.ToString(inputBytes).Replace("-", string.Empty);
         }
 
-        private void EncryptBlock(ref byte[] bytes, int st, int en) {
+        private void EncryptBlock(ref byte[] bytes, int st, int en)
+        {
             AddRoundKey(ref bytes, st, ref _keysExp, 0);
-            for (int i = 1; i <= Nr - 1; ++i) {
+            for (int i = 1; i <= Nr - 1; ++i)
+            {
                 SubBytes(ref bytes, st, en);
                 ShiftRows(ref bytes, st, en);
                 MixCols(ref bytes, st, en);
@@ -111,41 +120,49 @@ namespace crypto_test {
             //OutData(ref bytes, st, "out encr");
         }
 
-        public string Decrypt(string text, string pass) {
-            if (text.Length % 32 != 0) {
+        public string Decrypt(string text, string pass)
+        {
+            if (text.Length % 32 != 0)
+            {
                 return "Can't decrypt";
             }
             // byte[] bytes = Encoding.Default.GetBytes(text);
             byte[] bytes = GetBytesFromHash(text);
             byte[] passInByte = GetBytesFromHash(pass);
             _keysExp = KeysExpansion(ref passInByte);
-            for (int i = 0; i < bytes.Length; i += 16) {
+            for (int i = 0; i < bytes.Length; i += 16)
+            {
                 DecryptBlock(ref bytes, i, i + 15);
             }
             // поток байт имеет следующую структуру: b[0]..b[k], s[4]..s[0], 0..0
             // b - байты сообщения, s - 4 байта размера сообщения
             int messageRightIndex = bytes.Length - 1;
-            while (bytes[messageRightIndex] == 0 && messageRightIndex > 0) {
+            while (bytes[messageRightIndex] == 0 && messageRightIndex > 0)
+            {
                 --messageRightIndex;
             }
-            if (messageRightIndex == 0) {
+            if (messageRightIndex == 0)
+            {
                 return "";
             }
             messageRightIndex -= 4;
             byte[] decryptedMessage = new byte[messageRightIndex + 1];
-            for (int i = 0; i < decryptedMessage.Length; ++i) {
+            for (int i = 0; i < decryptedMessage.Length; ++i)
+            {
                 decryptedMessage[i] = bytes[i];
             }
             return Encoding.Default.GetString(decryptedMessage);
         }
-        private void DecryptBlock(ref byte[] bytes, int st, int en) {
+        private void DecryptBlock(ref byte[] bytes, int st, int en)
+        {
             //OutData(ref bytes, st, "init decr");
             AddRoundKey(ref bytes, st, ref _keysExp, Nr * Nb);
             InvShiftRow(ref bytes, st, en);
             InvSubBytes(ref bytes, st, en);
             //OutData(ref bytes, st, "pre cycle decr");
 
-            for (int i = Nr - 1; i >= 1; --i) {
+            for (int i = Nr - 1; i >= 1; --i)
+            {
                 AddRoundKey(ref bytes, st, ref _keysExp, i * Nb);
                 InvMixCols(ref bytes, st, en);
                 InvShiftRow(ref bytes, st, en);
@@ -155,9 +172,11 @@ namespace crypto_test {
             AddRoundKey(ref bytes, st, ref _keysExp, 0);
         }
 
-        private void DecryptBlockOld(ref byte[] bytes, int st, int en) {
+        private void DecryptBlockOld(ref byte[] bytes, int st, int en)
+        {
             AddRoundKey(ref bytes, st, ref _keysExp, Nr * Nb);
-            for (int i = Nr - 1; i >= 1; --i) {
+            for (int i = Nr - 1; i >= 1; --i)
+            {
                 InvSubBytes(ref bytes, st, en);
                 InvShiftRow(ref bytes, st, en);
                 InvMixCols(ref bytes, st, en);
@@ -168,10 +187,13 @@ namespace crypto_test {
             AddRoundKey(ref bytes, st, ref _keysExp, 0);
         }
 
-        private void OutData(ref byte[] bytes, int st, string name) {
+        private void OutData(ref byte[] bytes, int st, string name)
+        {
             Console.WriteLine(name);
-            for (int i = 0; i < 4; ++i) {
-                for (int j = 0; j < 4; ++j) {
+            for (int i = 0; i < 4; ++i)
+            {
+                for (int j = 0; j < 4; ++j)
+                {
                     Console.Write($"{bytes[i * 4 + j + st]} ");
                 }
                 Console.WriteLine();
@@ -184,58 +206,77 @@ namespace crypto_test {
         /// <param name="bytes">ссылка на массив байт</param>
         /// <param name="st">индекс начала трансформации</param>
         /// <param name="end">индекс конца</param>
-        public void SubBytes(ref byte[] bytes, int st, int end) {
-            for (int i = st; i <= end; ++i) {
+        public void SubBytes(ref byte[] bytes, int st, int end)
+        {
+            for (int i = st; i <= end; ++i)
+            {
                 bytes[i] = _sBox[bytes[i]];
-            } 
+            }
         }
 
-        public void InvSubBytes(ref byte[] bytes, int st, int en) {
-            for (int i = st; i <= en; ++i) {
+        public void InvSubBytes(ref byte[] bytes, int st, int en)
+        {
+            for (int i = st; i <= en; ++i)
+            {
                 bytes[i] = _invSBox[bytes[i]];
             }
         }
 
-        public void ShiftRows(ref byte[] bytes, int st, int end) {
-            for (int i = 1; i < 4; ++i) {
-                for (int j = 0; j < i; ++j) {
+        public void ShiftRows(ref byte[] bytes, int st, int end)
+        {
+            for (int i = 1; i < 4; ++i)
+            {
+                for (int j = 0; j < i; ++j)
+                {
                     byte buf = 0;
-                    for (int k = 0; k < 4; ++k) {
-                        if (k == 0) {
+                    for (int k = 0; k < 4; ++k)
+                    {
+                        if (k == 0)
+                        {
                             buf = bytes[i * 4 + k + st];
                         }
-                        if(k == 3) {
+                        if (k == 3)
+                        {
                             bytes[i * 4 + k + st] = buf;
                             continue;
                         }
                         bytes[i * 4 + k + st] = bytes[i * 4 + k + st + 1];
-                    } 
+                    }
                 }
             }
         }
 
-        public void InvShiftRow(ref byte[] bytes, int st, int en) {
-            for (int i = 1; i < 4; ++i) {
-                for (int j = 0; j < i; ++j) {
+        public void InvShiftRow(ref byte[] bytes, int st, int en)
+        {
+            for (int i = 1; i < 4; ++i)
+            {
+                for (int j = 0; j < i; ++j)
+                {
                     byte buf = 0;
-                    for (int k = 3; k >= 0; --k) {
-                        if (k == 3) {
+                    for (int k = 3; k >= 0; --k)
+                    {
+                        if (k == 3)
+                        {
                             buf = bytes[i * 4 + k + st];
                         }
-                        if(k == 0) {
+                        if (k == 0)
+                        {
                             bytes[i * 4 + k + st] = buf;
                             continue;
                         }
                         bytes[i * 4 + k + st] = bytes[i * 4 + k + st - 1];
-                    } 
+                    }
                 }
             }
         }
 
-        public void MixCols(ref byte[] bytes, int st, int end) {
-            for (int i = 0; i < 4; ++i) {
+        public void MixCols(ref byte[] bytes, int st, int end)
+        {
+            for (int i = 0; i < 4; ++i)
+            {
                 int[] buff = new int[4];
-                for (int j = 0; j < 4; ++j) {
+                for (int j = 0; j < 4; ++j)
+                {
                     buff[j] = bytes[j * 4 + i + st];
                 }
 
@@ -251,10 +292,13 @@ namespace crypto_test {
             }
         }
 
-        public void InvMixCols(ref byte[] bytes, int st, int en) {
-            for (int i = 0; i < 4; ++i) {
+        public void InvMixCols(ref byte[] bytes, int st, int en)
+        {
+            for (int i = 0; i < 4; ++i)
+            {
                 int[] buff = new int[4];
-                for (int j = 0; j < 4; ++j) {
+                for (int j = 0; j < 4; ++j)
+                {
                     buff[j] = bytes[j * 4 + i + st];
                 }
 
@@ -265,57 +309,71 @@ namespace crypto_test {
             }
         }
 
-        public void AddRoundKey(ref byte[] bytes, int st, ref List<byte> keys, int stKey) {
-            for (int i = 0; i < 4; ++i) {
-                for (int j = 0; j < 4; ++j) {
+        public void AddRoundKey(ref byte[] bytes, int st, ref List<byte> keys, int stKey)
+        {
+            for (int i = 0; i < 4; ++i)
+            {
+                for (int j = 0; j < 4; ++j)
+                {
                     bytes[j * 4 + i + st] ^= keys[i * 4 + j + stKey];
                 }
             }
         }
 
-        private int XTime(int x) {
+        private int XTime(int x)
+        {
             int hb = x & 0x80;
             int shiftL = (x << 1) & 0xff;
             return hb == 0 ? (byte)shiftL : (byte)(shiftL ^ 0x1b);
         }
-        
+
         /// <summary>
         /// Умножение многочлена в GF(2^8) на x
         /// </summary>
         /// <param name="x">Многочлен, умножаемый на x</param>
         /// <param name="y">Степень x</param>
         /// <returns></returns>
-        private int XTimePow(int x, int y) {
+        private int XTimePow(int x, int y)
+        {
             if (y == 0) return x;
-            for (int i = 0; i < y; ++i) {
+            for (int i = 0; i < y; ++i)
+            {
                 x = XTime(x);
             }
             return x;
         }
 
-        public List<byte> KeysExpansion(ref byte[] bytes, bool isDecrypt = false) {
+        public List<byte> KeysExpansion(ref byte[] bytes, bool isDecrypt = false)
+        {
             List<byte> ans = new List<byte>();
-            for (int i = 0; i < bytes.Length; ++i) {
+            for (int i = 0; i < bytes.Length; ++i)
+            {
                 ans.Add(bytes[i]);
             }
-            for (int i = Nk; i < Nb * (Nr + 1); ++i) {
+            for (int i = Nk; i < Nb * (Nr + 1); ++i)
+            {
                 byte[] temp = new byte[4];
-                for (int j = 0, k = (i - 1) * Nk; j < 4; ++j, ++k) {
+                for (int j = 0, k = (i - 1) * Nk; j < 4; ++j, ++k)
+                {
                     temp[j] = ans[k];
                 }
-                if (i % Nk == 0) {
+                if (i % Nk == 0)
+                {
                     RotWord(ref temp);
                     SubWord(ref temp);
                     XorRCon(ref temp, i / Nk);
                 }
-                for (int j = 0; j < temp.Length; ++j) {
-                    ans.Add((byte)((int)ans[(i-Nk) * Nk + j] ^ temp[j]));
-                } 
+                for (int j = 0; j < temp.Length; ++j)
+                {
+                    ans.Add((byte)((int)ans[(i - Nk) * Nk + j] ^ temp[j]));
+                }
             }
 
-            if (isDecrypt) {
+            if (isDecrypt)
+            {
                 byte[] key = ans.ToArray();
-                for (int i = 1; i <= (Nr - 1); ++i) {
+                for (int i = 1; i <= (Nr - 1); ++i)
+                {
                     InvMixCols(ref key, i * Nb, i * Nb + 16);
                 }
                 return new List<byte>(key);
@@ -323,37 +381,47 @@ namespace crypto_test {
             return ans;
         }
 
-        private void XorRCon(ref byte[] bytes, int val) {
+        private void XorRCon(ref byte[] bytes, int val)
+        {
             int binPow = 2;
-            for (int i = 0; i < val - 1; ++i) {
+            for (int i = 0; i < val - 1; ++i)
+            {
                 binPow = XTime(binPow);
             }
             bytes[0] = (byte)((int)bytes[0] ^ binPow);
-            for (int i = 1; i < bytes.Length; ++i) {
+            for (int i = 1; i < bytes.Length; ++i)
+            {
                 bytes[i] = (byte)((int)bytes[i] ^ 0);
             }
         }
 
-        private void RotWord(ref byte[] bytes) {
+        private void RotWord(ref byte[] bytes)
+        {
             byte tElem = bytes.First();
-            for (int i = 0; i < bytes.Length - 1; ++i) {
+            for (int i = 0; i < bytes.Length - 1; ++i)
+            {
                 bytes[i] = bytes[i + 1];
             }
             bytes[bytes.Length - 1] = tElem;
         }
 
-        private void SubWord(ref byte[] bytes) {
-            for (int i = 0; i < bytes.Length; ++i) {
+        private void SubWord(ref byte[] bytes)
+        {
+            for (int i = 0; i < bytes.Length; ++i)
+            {
                 bytes[i] = _sBox[bytes[i]];
             }
         }
 
-        public int ByteMult(byte a, byte b) {
+        public int ByteMult(byte a, byte b)
+        {
             int res = 0;
             int bb = b;
-            for (int i = 0; i < 8; ++i) {
+            for (int i = 0; i < 8; ++i)
+            {
                 if (bb == 0) break;
-                if ((bb & 1) == 1) {
+                if ((bb & 1) == 1)
+                {
                     res ^= XTimePow(a, i);
                 }
                 bb >>= 1;
@@ -361,7 +429,8 @@ namespace crypto_test {
             return res;
         }
 
-        public byte[] GetBytesFromHash(string str) {
+        public byte[] GetBytesFromHash(string str)
+        {
             return Enumerable.Range(0, str.Length)
                      .Where(x => x % 2 == 0)
                      .Select(x => Convert.ToByte(str.Substring(x, 2), 16))

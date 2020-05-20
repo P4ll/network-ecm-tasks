@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
+﻿using SoloClient;
 using System.Net.Sockets;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using System.Data.Common;
-using SoloClient;
 
 namespace SocketLibTester.SocketHelpers
 {
@@ -18,7 +12,7 @@ namespace SocketLibTester.SocketHelpers
         public StringBuilder StringBuffer { get; set; } = new StringBuilder();
         public Client StateClient { get; private set; } = null;
         public ClientGUI StateForm { get; set; }
-        
+
         public State()
         {
             BufferMaxSize = 1024;

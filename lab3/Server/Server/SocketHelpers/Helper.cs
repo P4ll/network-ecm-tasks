@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Net;
 using System.Net.Sockets;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace SocketLibTester.SocketHelpers
 {
@@ -59,7 +53,7 @@ namespace SocketLibTester.SocketHelpers
                         state.StateServer.addLog(String.Format("Пришло {0} байт. \n Данные: {1}",
                             content.Length, content));
                         string[] cmdParts = content.Split(' ');
-                        cmdParts[0].ToLower();
+                        cmdParts[0] = cmdParts[0].ToLower();
                         bool isCommand = false;
                         for (int i = 0; i < state.StateServer.Commands.Length; ++i)
                         {

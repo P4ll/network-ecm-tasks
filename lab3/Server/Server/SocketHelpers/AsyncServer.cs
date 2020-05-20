@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace SocketLibTester.SocketHelpers
 {
@@ -20,8 +15,7 @@ namespace SocketLibTester.SocketHelpers
         public delegate void AddLogDelegate(string msg);
         public AddLogDelegate addLog;
 
-        private Thread _thread;
-        Socket _listener;
+        private Socket _listener;
         private State _currState;
 
         public AsyncServer()
@@ -94,11 +88,6 @@ namespace SocketLibTester.SocketHelpers
             {
                 _listener.Close();
             }
-            //_listener.Shutdown(SocketShutdown.Both);
-            //if (_currState == null)
-            //    _listener.Close();
-            //else
-            //    _currState.StateSocket.Close();
             addLog("Подключение деактивировано");
         }
     }

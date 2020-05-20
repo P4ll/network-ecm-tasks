@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
-using System.Linq;
+﻿using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
-using System.Data.Common;
 
 namespace SocketLibTester.SocketHelpers
 {
@@ -17,7 +11,7 @@ namespace SocketLibTester.SocketHelpers
         public StringBuilder StringBuffer { get; set; } = new StringBuilder();
         public AsyncServer StateServer { get; private set; } = null;
         public Command LastCommad { get; set; }
-        
+
         public State()
         {
             BufferMaxSize = 1024;

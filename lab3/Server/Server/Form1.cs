@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Runtime.InteropServices;
+﻿using crypto_test;
+using SocketLibTester.SocketHelpers;
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using crypto_test;
-using SocketLibTester.SocketHelpers;
 
 namespace Server
 {
@@ -156,7 +150,8 @@ namespace Server
                 _token = new CancellationTokenSource();
                 CancellationToken ct = _token.Token;
 
-                _task = new Task(() => {
+                _task = new Task(() =>
+                {
                     _server.Start(ct);
                 }, ct);
                 _task.Start();
